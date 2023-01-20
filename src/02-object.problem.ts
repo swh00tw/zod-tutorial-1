@@ -3,22 +3,29 @@
 import { expect, it } from "vitest";
 import { z } from "zod";
 
-const PersonResult = z.unknown();
+const PersonResult = z.object({
+  name: z.string(),
+  height: z.string(),
+});
 //                   ^ 🕵️‍♂️
 
-export const fetchStarWarsPersonName = async (id: string) => {
+export const fetchStarWarsPersonName = async <TData>(
+  id: string,
+  schema: z.Schema<TData>
+): Promise<TData> => {
   const data = await fetch(
-    "https://www.totaltypescript.com/swapi/people/" + id + ".json",
+    "https://www.totaltypescript.com/swapi/people/" + id + ".json"
   ).then((res) => res.json());
-
-  const parsedData = PersonResult.parse(data);
-
-  return parsedData.name;
+  return schema.parse(data);
 };
 
 // TESTS
 
 it("Should return the name", async () => {
-  expect(await fetchStarWarsPersonName("1")).toEqual("Luke Skywalker");
-  expect(await fetchStarWarsPersonName("2")).toEqual("C-3PO");
+  expect(
+    await fetchStarWarsPersonName("1", PersonResult).then((res) => res.name)
+  ).toEqual("Luke Skywalker");
+  expect(
+    await fetchStarWarsPersonName("2", PersonResult).then((res) => res.name)
+  ).toEqual("C-3PO");
 });
